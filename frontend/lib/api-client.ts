@@ -10,6 +10,10 @@ export const API_BASE =
 // Types
 // ============================================================================
 
+export type VideoStyle = "cinematic" | "anime" | "cyberpunk" | "watercolor" | "fantasy" | "noir";
+
+export type VoiceType = "alloy" | "echo" | "fable" | "onyx" | "nova" | "shimmer";
+
 export interface FileMetadata {
   key: string;
   size: number;
@@ -54,13 +58,12 @@ export interface StoryboardResponse {
 
 export interface GenerateRequest {
   prompt: string;
-  style: "cinematic" | "anime" | "cyberpunk" | "watercolor" | "fantasy" | "noir";
-  voice: "professional" | "enthusiastic" | "calm" | "dramatic" | "friendly";
-  google_api_key: string;  // Required - user must provide their Google API key
-  gmi_api_key: string;  // Required - user must provide their GMI API key
-  elevenlabs_api_key?: string;  // Optional - uses default if not provided
+  style: VideoStyle;
+  voice: string;
+  google_api_key: string;
+  gmi_api_key: string;
+  elevenlabs_api_key?: string;
 }
-
 
 export interface GenerateResponse {
   video_url: string;
@@ -68,7 +71,6 @@ export interface GenerateResponse {
   title: string;
   duration: number;
 }
-
 
 // ============================================================================
 // SSE Event Types
@@ -192,7 +194,6 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
     const body = await res.json().catch(() => ({}));
     const detail = body?.detail;
 
-    // 422 validation errors
     if (Array.isArray(detail)) {
       const first = detail[0];
       const field = Array.isArray(first?.loc)
@@ -204,7 +205,6 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
       throw new ApiError(msg, res.status);
     }
 
-    // Classified error
     if (detail && typeof detail === "object") {
       throw new ApiError(
         detail.message || `API error: ${res.status}`,
@@ -261,7 +261,7 @@ export async function getRunAssets(runId: string): Promise<FileMetadata[]> {
 
 export async function createStoryboard(
   prompt: string,
-  style: string = "cinematic",
+  style: VideoStyle = "cinematic",
   voice: string = "professional"
 ): Promise<StoryboardResponse> {
   return apiFetch<StoryboardResponse>("/runs/storyboard", {
@@ -357,7 +357,6 @@ export async function streamMediaGeneration(
 // Utilities
 // ============================================================================
 
-/** Durable URL → playback URL via backend proxy */
 export function playbackUrl(durableOrKey: string): string {
   if (!durableOrKey.startsWith("http")) {
     return `${API_BASE}/assets/${durableOrKey}`;
@@ -374,20 +373,17 @@ export function playbackUrl(durableOrKey: string): string {
   }
 }
 
-/** Format duration in seconds to MM:SS */
 export function formatDuration(seconds: number): string {
   const mins = Math.floor(seconds / 60);
   const secs = Math.floor(seconds % 60);
   return mins > 0 ? `${mins}:${secs.toString().padStart(2, "0")}` : `${secs}s`;
 }
 
-/** Truncate text with ellipsis */
 export function truncateText(text: string, maxLength: number = 60): string {
   if (text.length <= maxLength) return text;
   return text.slice(0, maxLength) + "...";
 }
 
-/** Format file size */
 export function formatFileSize(bytes: number): string {
   if (bytes < 1024) return `${bytes}B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)}KB`;

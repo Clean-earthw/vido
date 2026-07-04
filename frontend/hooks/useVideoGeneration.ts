@@ -7,6 +7,7 @@ import {
   ComposeCompleteEvent,
   ErrorEvent,
   NoticeEvent,
+  VideoStyle,
 } from "@/lib/api-client";
 
 interface Scene {
@@ -19,11 +20,11 @@ interface Scene {
 
 interface GenerateParams {
   prompt: string;
-  style: string;
+  style: VideoStyle;
   voice: string;
-  google_api_key: string;  // Required
-  gmi_api_key: string;  // Required
-  elevenlabs_api_key?: string;  // Optional
+  google_api_key: string;
+  gmi_api_key: string;
+  elevenlabs_api_key?: string;
 }
 
 interface UseVideoGenerationReturn {
@@ -64,105 +65,130 @@ export function useVideoGeneration(): UseVideoGenerationReturn {
   }, []);
 
   const generate = useCallback(async (params: GenerateParams) => {
-    reset();
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+
     setStatus("generating");
     setProgress(0);
     setScenes([]);
     setVideoUrl(null);
     setError(null);
 
-    // Validate Google API key
     if (!params.google_api_key || params.google_api_key.trim() === "") {
       setError("Google API key is required. Please enter your Google API key.");
       setStatus("error");
       return;
     }
 
-    // Validate GMI API key
     if (!params.gmi_api_key || params.gmi_api_key.trim() === "") {
       setError("GMICloud API key is required. Please enter your GMI_API_KEY.");
       setStatus("error");
       return;
     }
 
+    const validStyles: VideoStyle[] = ["cinematic", "anime", "cyberpunk", "watercolor", "fantasy", "noir"];
+    if (!params.style || !validStyles.includes(params.style)) {
+      setError(`Invalid style. Must be one of: ${validStyles.join(", ")}`);
+      setStatus("error");
+      return;
+    }
+
+    if (!params.voice || params.voice.trim() === "") {
+      setError("Voice is required. Please select a voice.");
+      setStatus("error");
+      return;
+    }
+
     try {
-      await streamMediaGeneration(params, {
-        onStageStart: (stage) => {
-          console.log(`Stage start: ${stage}`);
-          const stageProgress: Record<string, number> = {
-            "B0.reference": 10,
-            "B1.keyframes": 25,
-            "B2.media": 50,
-            "C.compose": 85,
-          };
-          setProgress(stageProgress[stage] || 10);
+      await streamMediaGeneration(
+        {
+          prompt: params.prompt,
+          style: params.style,
+          voice: params.voice,
+          google_api_key: params.google_api_key,
+          gmi_api_key: params.gmi_api_key,
+          elevenlabs_api_key: params.elevenlabs_api_key,
         },
-
-        onStageComplete: (stage) => {
-          console.log(`Stage complete: ${stage}`);
-          const stageProgress: Record<string, number> = {
-            "B0.reference": 20,
-            "B1.keyframes": 45,
-            "B2.media": 80,
-            "C.compose": 95,
-          };
-          setProgress(stageProgress[stage] || 50);
-        },
-
-        onSceneAsset: (event: SceneAssetEvent) => {
-          setScenes((prev) => {
-            const updated = [...prev];
-            const existing = updated.find(s => s.index === event.step_index);
-            
-            const assetData = {
-              ...(event.media_type === "video/mp4" 
-                ? { video_url: event.asset_url } 
-                : { image_url: event.asset_url }
-              ),
+        {
+          onStageStart: (stage) => {
+            console.log(`Stage start: ${stage}`);
+            const stageProgress: Record<string, number> = {
+              "B0.reference": 10,
+              "B1.keyframes": 25,
+              "B2.media": 50,
+              "C.compose": 85,
             };
+            setProgress(stageProgress[stage] || 10);
+          },
 
-            if (existing) {
-              Object.assign(existing, assetData);
-              return updated;
-            } else {
-              const newScene: Scene = {
-                index: event.step_index,
-                caption: `Scene ${event.step_index + 1}`,
-                ...assetData,
+          onStageComplete: (stage) => {
+            console.log(`Stage complete: ${stage}`);
+            const stageProgress: Record<string, number> = {
+              "B0.reference": 20,
+              "B1.keyframes": 45,
+              "B2.media": 80,
+              "C.compose": 95,
+            };
+            setProgress(stageProgress[stage] || 50);
+          },
+
+          onSceneAsset: (event: SceneAssetEvent) => {
+            setScenes((prev) => {
+              const updated = [...prev];
+              const existing = updated.find((s) => s.index === event.step_index);
+
+              const assetData = {
+                ...(event.media_type === "video/mp4"
+                  ? { video_url: event.asset_url }
+                  : { image_url: event.asset_url }),
               };
-              updated.push(newScene);
-              return updated.sort((a, b) => a.index - b.index);
-            }
-          });
-          
-          setProgress((p) => Math.min(p + 3, 90));
-        },
 
-        onComplete: (event: ComposeCompleteEvent) => {
-          setVideoUrl(event.asset.url);
-          setVideoTitle(event.spec.title);
-          setVideoDuration(event.spec.total_duration_sec);
-          setStatus("complete");
-          setProgress(100);
-        },
+              if (existing) {
+                Object.assign(existing, assetData);
+                return updated;
+              } else {
+                const newScene: Scene = {
+                  index: event.step_index,
+                  caption: `Scene ${event.step_index + 1}`,
+                  ...assetData,
+                };
+                updated.push(newScene);
+                return updated.sort((a, b) => a.index - b.index);
+              }
+            });
 
-        onError: (event: ErrorEvent) => {
-          setError(event.message);
-          setStatus("error");
-        },
+            setProgress((p) => Math.min(p + 3, 90));
+          },
 
-        onNotice: (event: NoticeEvent) => {
-          console.warn("Notice:", event.message);
-        },
-      });
+          onComplete: (event: ComposeCompleteEvent) => {
+            setVideoUrl(event.asset.url);
+            setVideoTitle(event.spec.title);
+            setVideoDuration(event.spec.total_duration_sec);
+            setStatus("complete");
+            setProgress(100);
+          },
+
+          onError: (event: ErrorEvent) => {
+            setError(event.message);
+            setStatus("error");
+          },
+
+          onNotice: (event: NoticeEvent) => {
+            console.warn("Notice:", event.message);
+          },
+        }
+      );
     } catch (err) {
       if (err instanceof Error && err.name === "AbortError") {
+        console.log("Generation aborted");
         return;
       }
       setError(err instanceof Error ? err.message : "Generation failed");
       setStatus("error");
     }
-  }, [reset]);
+  }, []);
 
   return {
     generate,

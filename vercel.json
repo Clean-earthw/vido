@@ -1,0 +1,18 @@
+{
+  "services": {
+    "my_frontend": {
+      "root": "frontend/",
+      "framework": "nextjs"
+    },
+    "my_backend": {
+      "root": "backend/",
+      "entrypoint": "app.main:app"
+    }
+  },
+  "rewrites": [
+    { 
+      "source": "/(.*)", 
+      "destination": { "service": "my_frontend" }
+    }
+  ]
+}
