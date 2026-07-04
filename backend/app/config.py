@@ -9,17 +9,17 @@ _ROOT_ENV = Path(__file__).resolve().parents[3] / ".env"
 class Settings(BaseSettings):
     # --- Backblaze B2 ---
     b2_region: str = "us-east-005"
-    b2_key_id: str = "005b006de064ca20000000001"
-    b2_application_key: str = "K005J8bRUG5wm6iS4VNt5JKEuWiHlew"
-    b2_bucket_name: str = "denisbucket"
+    b2_key_id: str = ""
+    b2_application_key: str = ""
+    b2_bucket_name: str = ""
 
     # --- Google AI (Gemini for storyboard) ---
-    google_api_key: str = "AIzaSyCymOyocO2aODVQhU3IGtOL0oAEyoStKds"
+    google_api_key: str = ""
     google_project_id: Optional[str] = None
     google_location: str = "us-central1"
 
     # --- Gemini Chat (Storyboard generation) ---
-    chat_model: str = "gemini-2.5-pro"
+    chat_model: str = "gemini-2.5-flash"
     chat_temperature: float = 0.7
 
     # --- Veo Video Generation ---
@@ -27,12 +27,12 @@ class Settings(BaseSettings):
     veo_resolution: str = "720p"  # 720p or 1080p
 
     # --- GMICloud (Image + Video Generation) ---
-    gmi_api_key: str = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImVhNjc2ZTExLTc1ODItNGE2NC04MzY5LTIyMGU2OGM0ZjE0ZCIsInNjb3BlIjoiaWVfbW9kZWwiLCJjbGllbnRJZCI6IjAwMDAwMDAwLTAwMDAtMDAwMC0wMDAwLTAwMDAwMDAwMDAwMCJ9.9wrcDlMZ0Amnmchxxyl3RdJ2RVxQ1TINtvjMtj1h_so" # User will provide this
+    gmi_api_key: str = "" # User will provide this
     gmi_image_model: str = "seedream-5.0-lite"  # Text-to-image model
     gmi_video_model: str = "Kling-Image2Video-V2.1-Master"
 
     # --- ElevenLabs TTS (Primary) ---
-    elevenlabs_api_key: str = "sk_b421769fe8ad92970bba32f0f300a1221e609e8006fbe520"
+    elevenlabs_api_key: str = ""
     elevenlabs_voice_id: str = "JBFqnCBsd6RMkjVDRZzb"
     elevenlabs_model: str = "eleven_v3"
 
