@@ -23,7 +23,7 @@ StoryForge transforms text prompts into fully produced videos using AI. Simply d
 **1. Clone the repository**
 
 ```bash
-git clone https://github.com/your-repo/storyforge.git
+git clone https://github.com/Clean-earthw/vido.git
 cd storyforge
 ```
 
