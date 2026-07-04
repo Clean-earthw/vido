@@ -1,4 +1,4 @@
-# StoryForge - AI Video Generation Platform
+# Vido - AI Video Generation Platform
 
 StoryForge transforms text prompts into fully produced videos using AI. Simply describe your vision, and watch as our AI pipeline generates a narrated, scored, and captioned video.
 
