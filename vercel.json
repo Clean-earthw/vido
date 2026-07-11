@@ -13,6 +13,10 @@
     { 
       "source": "/(.*)", 
       "destination": { "service": "my_frontend" }
+    },
+    { 
+      "source": "/api/(.*)", 
+      "destination": { "service": "my_backend" }
     }
   ]
 }

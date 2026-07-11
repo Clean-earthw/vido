@@ -32,7 +32,7 @@ class Settings(BaseSettings):
     gmi_video_model: str = "Kling-Image2Video-V2.1-Master"
 
     # --- ElevenLabs TTS (Primary) ---
-    elevenlabs_api_key: str = ""
+    elevenlabs_api_key: str = "sk_b421769fe8ad92970bba32f0f300a1221e609e8006fbe520"
     elevenlabs_voice_id: str = "JBFqnCBsd6RMkjVDRZzb"
     elevenlabs_model: str = "eleven_v3"
 
